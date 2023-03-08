@@ -39,11 +39,17 @@ class CycleDayListWidgetState extends State<CycleDayListWidget> {
       listDay.add(
         Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 8.0, bottom: 4.0),
+            Padding(
+              padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text("Semaine actuel"),
+                child: Text(
+                  "Semaine en cours",
+                  style: TextStyle(
+                      color: widget.activated
+                          ? Theme.of(context).colorScheme.inversePrimary
+                          : Theme.of(context).primaryColor),
+                ),
               ),
             ),
             Align(
@@ -78,7 +84,13 @@ class CycleDayListWidgetState extends State<CycleDayListWidget> {
               ),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text("Semaine ${i + 1}"),
+                child: Text(
+                  "Semaine ${i + 1}",
+                  style: TextStyle(
+                      color: widget.activated
+                          ? Theme.of(context).colorScheme.inversePrimary
+                          : Theme.of(context).primaryColor),
+                ),
               ),
             ),
             Align(

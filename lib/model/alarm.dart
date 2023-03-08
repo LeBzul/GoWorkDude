@@ -62,31 +62,48 @@ class Alarm {
     return todayAlarm;
   }
 
-  DateTime getNextDateTimeAlarm() {
+  /// Retourne un DateTime de la date d'aujourd'hui ou la date de demain
+  /// si l'alarme est activé le jour la
+  DateTime? getNextDateAlarm() {
+    /// Si l'alarme est désactivé, il n'y a pas de prochain alarme
+    if (!activated) {
+      return null;
+    }
     DateTime now = DateTime.now();
     DateTime todayAlarm = getTodayAlarm();
     DateTime nextAlarm;
     switch (now.compareTo(todayAlarm)) {
-      // 0 ou 1 on prend le lendemain
+
+      /// 0 ou 1  l'alarme d'ajourd'hui est déjà passé, on prend demain
       case 0:
       case 1:
         nextAlarm = todayAlarm.add(const Duration(days: 1));
-        print('getNextDateTimeAlarm (todayAlarm+1) = ${nextAlarm}');
-        break;
-      // -1 on prend aujourd'hui
-      default:
-        print('getNextDateTimeAlarm (todayAlarm) = ${todayAlarm}');
-        nextAlarm = todayAlarm;
-        break;
-    }
+        if (nextAlarm.weekday - 1 == 0) {
+          /// Demain est une nouvelle semaine, il faut regarder dans le cycle prochain
+          if (_orderedCycleList().length > 1) {
+            /// Si y a plusieurs cycle
+            return _orderedCycleList()[1][nextAlarm.weekday - 1] == true ? nextAlarm : null;
+          } else {
+            /// Si y a qu'un cycle
+            return getActualCycleList()[nextAlarm.weekday - 1] == true ? nextAlarm : null;
+          }
+        } else {
+          /// Si demain est dans le cycle actuel
+          return getActualCycleList()[nextAlarm.weekday - 1] == true ? nextAlarm : null;
+        }
 
-    return nextAlarm;
+      /// -1 l'alarme d'ajourd'hui n'est pas encore passé
+      default:
+        return getActualCycleList()[todayAlarm.weekday - 1] == true ? todayAlarm : null;
+    }
   }
 
+  /// Retourne le cycle de jour de la semaine en cours
   List<bool> getActualCycleList() {
     return _orderedCycleList().first;
   }
 
+  /// Retourne le cycle de jour des semaines ordonné selon la date actuel
   List<List<bool>> _orderedCycleList() {
     List<List<bool>> orderedList = <List<bool>>[];
     int startedIndex = _indexOfActualWeek();
@@ -104,21 +121,23 @@ class Alarm {
     return orderedList;
   }
 
+  /// Retourne l'index du cycle de la semaine actuel
   int _indexOfActualWeek() {
     DateTime now = DateTime.now();
-    DateTime nowUp = now; //.add(Duration(days: 7 * 2));
+    DateTime nowUp = now;
     Duration duration = nowUp.difference(referenceDate);
     double nbWeek = (duration.inDays / 7);
     return (nbWeek % _cycleList.length).toInt();
   }
 
+  /// Pour crée un cycle de jour rapidement
   static List<bool> defaultCycle() {
     return [
-      false,
-      false,
-      false,
-      false,
-      false,
+      true,
+      true,
+      true,
+      true,
+      true,
       false,
       false,
     ];

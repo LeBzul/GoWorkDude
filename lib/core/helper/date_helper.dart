@@ -19,4 +19,8 @@ class DateHelper {
         return '!';
     }
   }
+
+  static String dateToHourFormat(DateTime dateTime) {
+    return '${dateTime.hour < 10 ? '0${dateTime.hour}' : dateTime.hour}:${dateTime.minute < 10 ? '0${dateTime.minute}' : dateTime.minute}';
+  }
 }

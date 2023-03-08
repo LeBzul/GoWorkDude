@@ -1,5 +1,4 @@
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
-import 'package:app_settings/app_settings.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:goworkdude/controller/notification_controller.dart';
@@ -9,8 +8,7 @@ import '../model/alarm.dart';
 import '../widget/alarm_card_widget.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key, required this.title}) : super(key: key);
-  final String title;
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   HomeScreenState createState() => HomeScreenState();
@@ -32,8 +30,6 @@ class HomeScreenState extends State<HomeScreen> {
         onPressed: () async {
           if (await NotificationController.instance.checkPermission()) {
             createNewAlarm();
-          } else {
-            await AppSettings.openNotificationSettings();
           }
         },
         child: const Icon(Icons.add),
@@ -129,17 +125,7 @@ class HomeScreenState extends State<HomeScreen> {
                 hour: timeTemp.hour,
                 minute: timeTemp.minute,
                 activated: true,
-                cycleList: <List<bool>>[
-                  [
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                  ]
-                ],
+                cycleList: <List<bool>>[Alarm.defaultCycle()],
                 referenceDate: DateTime.now()),
           );
         },

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:darty_json/darty_json.dart';
 
 import '../main.dart';
@@ -19,7 +18,6 @@ class HomeController {
         if (stringAlarm == null) {
           return;
         }
-
         list.add(
           Alarm.fromJson(
             Json.fromString(stringAlarm),
@@ -38,11 +36,12 @@ class HomeController {
 
   void removeDayList(Alarm alarm, List<bool> dayList, int index) {
     alarm.removeCycle(dayList, index);
+    NotificationController.instance.startNotification(alarm);
   }
 
   Future<void> removeAlarm(Alarm alarm) async {
     await AlarmManagerApp.prefs.remove('alarm-${alarm.id}');
-    await AndroidAlarmManager.cancel(alarm.id);
+    NotificationController.instance.stopNotification(alarm);
   }
 
   Future<void> putOrAddAlarm(Alarm alarm) async {
@@ -51,6 +50,6 @@ class HomeController {
       jsonEncode(alarm),
     );
 
-    NotificationController.instance.putOrAddScheduledNotification(alarm);
+    NotificationController.instance.startNotification(alarm);
   }
 }

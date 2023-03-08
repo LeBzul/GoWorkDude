@@ -1,16 +1,18 @@
-import 'dart:isolate';
-import 'dart:ui';
+import 'dart:convert';
+import 'dart:typed_data';
 
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:app_settings/app_settings.dart';
+import 'package:darty_json/darty_json.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:goworkdude/controller/home_controller.dart';
 import 'package:goworkdude/screen/alarm_screen.dart';
+import 'package:open_settings/open_settings.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-import 'package:vibration/vibration.dart';
 
 import '../main.dart';
 import '../model/alarm.dart';
@@ -18,28 +20,33 @@ import '../model/alarm.dart';
 ///  *********************************************
 ///     NOTIFICATION CONTROLLER
 ///  *********************************************
-@pragma('vm:entry-point')
-void alarmLaunched(int id, Map<String, dynamic> param) {
-  NotificationController.instance.startNotification();
-}
 
 @pragma('vm:entry-point')
-void onDidReceiveBackgroundNotificationResponse(NotificationResponse details) {
-  NotificationController.instance.stopNotification();
+void onDidReceiveBackgroundNotificationResponse(NotificationResponse details) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  AlarmManagerApp.prefs = await SharedPreferences.getInstance();
+  Alarm alarm = Alarm.fromJson(
+    Json.fromString(details.payload ?? ''),
+  );
+  NotificationController.instance.stopNotification(alarm);
 
   switch (details.actionId) {
     case NotificationController.ACTION_STOP:
+      // Nothing
       break;
     case NotificationController.ACTION_SNOOZE:
-      NotificationController.instance.snoozeAction();
+      NotificationController.instance.snoozeAction(alarm);
       break;
   }
+
+  /// On resynchronise le tout, ca fait pas de mal
+  NotificationController.instance.synchronizeAllAlarm();
 }
 
 class NotificationController {
   static const String ACTION_STOP = "stop";
   static const String ACTION_SNOOZE = "snooze";
-  static const int SNOOZE_ALARM_ID = 9999;
+  static const int SNOOZE_ALARM_ID = -2;
 
   bool _asNotificationInit = false;
 
@@ -65,7 +72,9 @@ class NotificationController {
     );
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: (details) {
+      onDidReceiveNotificationResponse: (details) async {
+        WidgetsFlutterBinding.ensureInitialized();
+        AlarmManagerApp.prefs = await SharedPreferences.getInstance();
         AlarmManagerApp.navigatorKey.currentState?.pushReplacement(
           MaterialPageRoute(
             settings: const RouteSettings(name: '/alarm'),
@@ -81,24 +90,112 @@ class NotificationController {
     return;
   }
 
-  Future<void> snoozeAction() async {
-    _Isolate.instance.snoozeNotification();
+  Future<void> _createScheduledNotification(Alarm alarm, {bool snooze = false}) async {
+    await stopNotification(alarm);
+
+    /// Alarme désactivé
+    if (!alarm.activated) {
+      print("=============");
+      print("createScheduledNotification = Alarme désactivé pour ${alarm.id}");
+      print("=============");
+      return;
+    }
+
+    DateTime? nextAlarm = alarm.getNextDateAlarm();
+
+    /// Pas d'alarme de prévu dans les 24h
+    if (nextAlarm == null && snooze == false) {
+      print("=============");
+      print("createScheduledNotification = Pas d'alarme de prévu dans les 24h pour ${alarm.id}");
+      print("=============");
+      return;
+    }
+
+    print("=============");
+    print("createScheduledNotification $nextAlarm, Snooze : $snooze  pour ${alarm.id}");
+    print("=============");
+    const int insistentFlag = 4;
+    await NotificationController.instance.initLocalNotification();
+    await NotificationController.instance.flutterLocalNotificationsPlugin.zonedSchedule(
+      snooze == false ? alarm.id : NotificationController.SNOOZE_ALARM_ID,
+      'Go Work Dude !',
+      'Réveil de ${alarm.hourToString()}${snooze == true ? ' (Snooze)' : ''}',
+      snooze == false
+          ? tz.TZDateTime.from(nextAlarm!, tz.local)
+          : tz.TZDateTime.from(
+              DateTime.now().add(
+                Duration(minutes: 5),
+              ),
+              tz.local),
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'GoWorkDude',
+          'Notification de lancement du reveil',
+          channelDescription: 'Indispensable pour lancer le reveil',
+          priority: Priority.max,
+          importance: Importance.max,
+          playSound: true,
+          sound: RawResourceAndroidNotificationSound('praveen'),
+          ongoing: true,
+          onlyAlertOnce: false,
+          additionalFlags: Int32List.fromList(<int>[insistentFlag]),
+          autoCancel: false,
+          enableVibration: false,
+          fullScreenIntent: true,
+          chronometerCountDown: true,
+          visibility: NotificationVisibility.public,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
+          actions: <AndroidNotificationAction>[
+            AndroidNotificationAction(NotificationController.ACTION_SNOOZE, 'Snooze'),
+            AndroidNotificationAction(NotificationController.ACTION_STOP, 'Stop'),
+          ],
+        ),
+      ),
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      androidAllowWhileIdle: true,
+      payload: jsonEncode(alarm),
+    );
   }
 
-  Future<void> stopNotification() async {
-    _Isolate.instance.stopNotification();
+  Future<void> snoozeAction(Alarm alarm) async {
+    return await _createScheduledNotification(alarm, snooze: true);
   }
 
-  Future<void> startNotification() async {
-    _Isolate.instance.startNotification();
+  Future<void> stopNotification(Alarm alarm) async {
+    print("=============");
+    print("cancel Notification pour ${alarm.id}");
+    print("=============");
+    return await NotificationController.instance.flutterLocalNotificationsPlugin.cancel(alarm.id);
   }
 
-  Future<void> putOrAddScheduledNotification(Alarm alarm) async {
-    _Isolate.instance.putOrAddAlarm(alarm);
+  Future<void> startNotification(Alarm alarm) async {
+    return await _createScheduledNotification(alarm);
   }
 
   Future<bool> checkPermission() async {
-    if (await Permission.notification.status != PermissionStatus.granted) {
+    Map<Permission, PermissionStatus> permissions = {};
+    initLocalNotification();
+
+    PermissionStatus notificationStatus = await Permission.notification.status;
+    permissions.putIfAbsent(Permission.notification, () => notificationStatus);
+
+    if (notificationStatus != PermissionStatus.granted) {
+      await AppSettings.openNotificationSettings();
+      return false;
+    }
+
+    PermissionStatus accessNotificationPolicyStatus = await Permission.accessNotificationPolicy.status;
+    permissions.putIfAbsent(Permission.accessNotificationPolicy, () => accessNotificationPolicyStatus);
+
+    if (accessNotificationPolicyStatus != PermissionStatus.granted) {
+      await OpenSettings.openNotificationPolicyAccessSetting();
+      return false;
+    }
+
+    PermissionStatus ignoreBatteryOptimizationsStatus = await Permission.ignoreBatteryOptimizations.status;
+    permissions.putIfAbsent(Permission.ignoreBatteryOptimizations, () => ignoreBatteryOptimizationsStatus);
+    if (ignoreBatteryOptimizationsStatus != PermissionStatus.granted) {
+      await AppSettings.openBatteryOptimizationSettings();
       return false;
     }
     return true;
@@ -109,12 +206,29 @@ class NotificationController {
     final String timeZoneName = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(timeZoneName));
   }
+
+  Future<void> synchronizeAllAlarm() async {
+    print("===========");
+    print("synchronizeAllAlarm");
+    print("===========");
+    for (var alarm in HomeController().list) {
+      await startNotification(alarm);
+    }
+  }
 }
 
-enum IsolateAction {
+/*
+enum IsolateEnumAction {
   startNotification,
   stopNotification,
   snoozeNotification,
+}
+
+class IsolateAction {
+  Alarm alarm;
+  IsolateEnumAction action;
+
+  IsolateAction(this.alarm, this.action);
 }
 
 class _Isolate {
@@ -127,20 +241,8 @@ class _Isolate {
     _createIsolate();
   }
 
-  void startNotification() {
-    IsolateNameServer.lookupPortByName(isolatePort)?.send(IsolateAction.startNotification);
-  }
-
-  void stopNotification() {
-    IsolateNameServer.lookupPortByName(isolatePort)?.send(IsolateAction.stopNotification);
-  }
-
-  void snoozeNotification() {
-    IsolateNameServer.lookupPortByName(isolatePort)?.send(IsolateAction.snoozeNotification);
-  }
-
-  void putOrAddAlarm(Alarm alarm) {
-    IsolateNameServer.lookupPortByName(isolatePort)?.send(alarm);
+  void execute(IsolateAction isolateAction) {
+    IsolateNameServer.lookupPortByName(isolatePort)?.send(isolateAction);
   }
 
   void _createIsolate() {
@@ -148,81 +250,86 @@ class _Isolate {
     IsolateNameServer.registerPortWithName(receiver.sendPort, isolatePort);
     receiver.listen(
       (message) {
-        switch (message) {
-          case IsolateAction.startNotification:
-            _createNotification();
+        switch ((message as IsolateAction).action) {
+          case IsolateEnumAction.startNotification:
+            _createScheduledNotification(message.alarm);
             break;
-          case IsolateAction.stopNotification:
-            _cancelNotification();
+          case IsolateEnumAction.stopNotification:
+            _cancelNotification(message.alarm);
             break;
-          case IsolateAction.snoozeNotification:
-            _snoozeNotification();
+          case IsolateEnumAction.snoozeNotification:
+            _snoozeNotification(message.alarm);
             break;
           default:
-            if (message is Alarm) {
-              AndroidAlarmManager.periodic(
-                const Duration(minutes: 1),
-                message.id,
-                alarmLaunched,
-                startAt: message.getNextDateTimeAlarm(),
-                exact: true,
-                wakeup: true,
-                rescheduleOnReboot: true,
-                allowWhileIdle: true,
-              );
-            }
+            break;
         }
       },
     );
   }
 
-  Future<void> _snoozeNotification() async {
-    _cancelNotification();
-    AndroidAlarmManager.oneShotAt(
-      DateTime.now().add(const Duration(minutes: 1)),
-      NotificationController.SNOOZE_ALARM_ID,
-      alarmLaunched,
-      exact: true,
-      wakeup: true,
-      rescheduleOnReboot: true,
-      allowWhileIdle: true,
+  Future<void> _snoozeNotification(Alarm alarm) async {
+    _createScheduledNotification(
+      alarm,
+      snooze: true,
     );
   }
 
-  Future<void> _cancelNotification() async {
-    Vibration.cancel();
-    FlutterRingtonePlayer.stop();
-    await NotificationController.instance.flutterLocalNotificationsPlugin.cancel(0);
+  Future<void> _cancelNotification(Alarm alarm) async {
+    await NotificationController.instance.flutterLocalNotificationsPlugin.cancel(alarm.id);
   }
 
-  Future<void> _createNotification() async {
-    Vibration.vibrate(duration: 1000, repeat: 1);
-    await FlutterRingtonePlayer.playAlarm(asAlarm: true, looping: true);
+  Future<void> _createScheduledNotification(Alarm alarm, {bool snooze = false}) async {
+    DateTime? nextAlarm = alarm.getNextDateAlarm();
+
+    /// Pas d'alarme de prévu dans les 24h
+    if (nextAlarm == null && snooze == false) {
+      return;
+    }
+
+    print("=============");
+    print("createScheduledNotification $nextAlarm, Snooze : $snooze");
+    print("=============");
+    const int insistentFlag = 4;
     await NotificationController.instance.initLocalNotification();
-    await NotificationController.instance.flutterLocalNotificationsPlugin.show(
-      0,
-      "title",
-      "body",
-      const NotificationDetails(
+    await NotificationController.instance.flutterLocalNotificationsPlugin.zonedSchedule(
+      snooze == false ? alarm.id : NotificationController.SNOOZE_ALARM_ID,
+      'title',
+      'body',
+      snooze == false
+          ? tz.TZDateTime.from(nextAlarm!, tz.local)
+          : tz.TZDateTime.from(
+              DateTime.now().add(
+                Duration(minutes: 5),
+              ),
+              tz.local),
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'GoWorkDude',
           'Notification de lancement du reveil',
           channelDescription: 'Indispensable pour lancer le reveil',
-          priority: Priority.high,
-          importance: Importance.high,
-          playSound: false,
+          priority: Priority.max,
+          importance: Importance.max,
+          playSound: true,
+          sound: RawResourceAndroidNotificationSound('praveen'),
           ongoing: true,
+          onlyAlertOnce: false,
+          additionalFlags: Int32List.fromList(<int>[insistentFlag]),
           autoCancel: false,
           enableVibration: false,
           fullScreenIntent: true,
           chronometerCountDown: true,
           visibility: NotificationVisibility.public,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
           actions: <AndroidNotificationAction>[
             AndroidNotificationAction(NotificationController.ACTION_STOP, 'Stop'),
             AndroidNotificationAction(NotificationController.ACTION_SNOOZE, 'Snooze'),
           ],
         ),
       ),
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      androidAllowWhileIdle: true,
+      payload: jsonEncode(alarm),
     );
   }
 }
+*/

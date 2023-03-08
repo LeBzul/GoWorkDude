@@ -81,6 +81,7 @@ class AlarmCardWidgetState extends State<AlarmCardWidget> {
                             onChanged: (value) {
                               setState(() {
                                 widget.alarm.activated = value;
+                                widget.alarmChanged(widget.alarm);
                               });
                             },
                           )
