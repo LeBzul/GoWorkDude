@@ -91,7 +91,7 @@ class HomeScreenState extends State<HomeScreen> {
               controller.removeAlarm(alarm);
             });
           },
-          removedDayList: (Alarm alarm, List<bool> dayList, int index) {
+          removedDayList: (Alarm alarm, AlarmCycle dayList, int index) {
             setState(() {
               controller.removeDayList(
                 alarm,

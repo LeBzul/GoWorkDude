@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:goworkdude/core/helper/date_helper.dart';
 
+import '../model/alarm.dart';
 import 'day_button.dart';
 
 class DayListWidget extends StatefulWidget {
-  final void Function(List<bool> dayList) listChanged;
-  final void Function(List<bool> dayList)? removed;
+  final void Function(AlarmCycle dayList) listChanged;
+  final void Function(AlarmCycle dayList)? removed;
 
-  final List<bool> dayList;
+  final AlarmCycle dayList;
   final bool enableInteraction;
   final bool activated;
 
@@ -42,7 +43,7 @@ class DayListWidgetState extends State<DayListWidget> {
   List<Widget> buildDayList(BuildContext context) {
     List<Widget> listDay = [];
     int i = 0;
-    for (var element in widget.dayList) {
+    for (var element in widget.dayList.cycle) {
       int index = i;
       listDay.add(
         DayButtonWidget(
@@ -55,7 +56,7 @@ class DayListWidgetState extends State<DayListWidget> {
           ),
           enableInteraction: widget.enableInteraction,
           selectChanged: (value) {
-            widget.dayList[index] = value;
+            widget.dayList.cycle[index] = value;
             widget.listChanged.call(widget.dayList);
           },
         ),

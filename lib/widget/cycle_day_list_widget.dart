@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:goworkdude/model/alarm.dart';
 
 import 'day_list_widget.dart';
 
 class CycleDayListWidget extends StatefulWidget {
-  final void Function(List<List<bool>>) listChanged;
-  final void Function(List<bool> dayList, int index)? removedDayList;
+  final void Function(List<AlarmCycle>) listChanged;
+  final void Function(AlarmCycle dayList, int index)? removedDayList;
 
-  final List<List<bool>> cycleDayList;
+  final List<AlarmCycle> cycleDayList;
   final bool enableInteraction;
   final bool collapsed;
   final bool activated;
@@ -44,7 +45,7 @@ class CycleDayListWidgetState extends State<CycleDayListWidget> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "Semaine en cours",
+                  "Cette semaine",
                   style: TextStyle(
                       color: widget.activated
                           ? Theme.of(context).colorScheme.inversePrimary
@@ -85,7 +86,11 @@ class CycleDayListWidgetState extends State<CycleDayListWidget> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "Semaine ${i + 1}",
+                  i == 0
+                      ? "Cette semaine"
+                      : i == 1
+                          ? "Semaine prochaine"
+                          : "Dans $i semaines",
                   style: TextStyle(
                       color: widget.activated
                           ? Theme.of(context).colorScheme.inversePrimary

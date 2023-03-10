@@ -3,15 +3,17 @@ import 'package:darty_json/darty_json.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:goworkdude/controller/notification_controller.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:goworkdude/core/helper/date_helper.dart';
 
+import '../controller/notification_controller.dart';
 import '../model/alarm.dart';
 
 class AlarmScreen extends StatefulWidget {
   final NotificationResponse? details;
+  final bool playSound;
 
-  const AlarmScreen({Key? key, this.details}) : super(key: key);
+  const AlarmScreen({Key? key, this.details, this.playSound = false}) : super(key: key);
 
   @override
   AlarmScreenState createState() => AlarmScreenState();
@@ -23,12 +25,21 @@ class AlarmScreenState extends State<AlarmScreen> {
   @override
   void initState() {
     super.initState();
+
     String? payload = widget.details?.payload;
     if (payload == null) {
       _closeApp();
       return;
     }
     alarm = Alarm.fromJson(Json.fromString(payload));
+    if (widget.playSound) {
+      FlutterRingtonePlayer.play(
+        android: AndroidSounds.alarm,
+        fromAsset: "assets/praveen.mp3",
+        looping: true,
+        asAlarm: true, // Android only - all APIs
+      );
+    }
   }
 
   @override
@@ -72,66 +83,56 @@ class AlarmScreenState extends State<AlarmScreen> {
   Row buildActions() {
     return Row(
       children: [
-        SizedBox(
-          width: 100,
-          height: 100,
-          child: Stack(
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  NotificationController.instance.snoozeAction(alarm);
-                  _closeApp();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueGrey,
-                  shape: CircleBorder(),
-                  padding: EdgeInsets.all(24),
-                ),
-                child: Container(),
+        Stack(
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                NotificationController.instance.snoozeAction(alarm);
+                _closeApp();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueGrey,
+                shape: const CircleBorder(),
+                maximumSize: const Size(110, 110),
+                minimumSize: const Size(110, 110),
               ),
-              const Center(
-                child: Text(
-                  'Snooze',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 22,
-                  ),
+              child: const AutoSizeText(
+                'Snooze',
+                maxLines: 1,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 22,
                 ),
-              )
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
         Spacer(),
-        SizedBox(
-          width: 100,
-          height: 100,
-          child: Stack(
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  NotificationController.instance.stopNotification(alarm);
-                  _closeApp();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pink,
-                  shape: CircleBorder(),
-                  padding: EdgeInsets.all(24),
-                ),
-                child: Container(),
+        Stack(
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                NotificationController.instance.stopNotification(alarm);
+                _closeApp();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.pink,
+                shape: const CircleBorder(),
+                maximumSize: const Size(110, 110),
+                minimumSize: const Size(110, 110),
               ),
-              const Center(
-                child: Text(
-                  'Stop',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 22,
-                  ),
+              child: const AutoSizeText(
+                'Stop',
+                maxLines: 1,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 22,
                 ),
-              )
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -140,6 +141,7 @@ class AlarmScreenState extends State<AlarmScreen> {
   /// TODO: faire un controller pour ce screen
   /// Close App
   void _closeApp() {
+    FlutterRingtonePlayer.stop();
     SystemNavigator.pop();
   }
 }

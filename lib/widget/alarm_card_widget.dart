@@ -8,7 +8,7 @@ import 'cycle_day_list_widget.dart';
 class AlarmCardWidget extends StatefulWidget {
   final void Function(Alarm) alarmChanged;
   final void Function(Alarm) alarmRemoved;
-  final void Function(Alarm, List<bool>, int) removedDayList;
+  final void Function(Alarm, AlarmCycle, int) removedDayList;
 
   final Alarm alarm;
   final bool enableInteraction;
@@ -97,8 +97,8 @@ class AlarmCardWidgetState extends State<AlarmCardWidget> {
                       widget.alarm.cycleList = cycleList;
                       widget.alarmChanged(widget.alarm);
                     },
-                    cycleDayList: <List<bool>>[widget.alarm.getActualCycleList()],
-                    removedDayList: (List<bool> dayList, int index) {
+                    cycleDayList: <AlarmCycle>[widget.alarm.getActualCycleList()],
+                    removedDayList: (AlarmCycle dayList, int index) {
                       widget.removedDayList.call(
                         widget.alarm,
                         dayList,
@@ -117,8 +117,8 @@ class AlarmCardWidgetState extends State<AlarmCardWidget> {
                           widget.alarm.cycleList = cycleList;
                           widget.alarmChanged(widget.alarm);
                         },
-                        cycleDayList: widget.alarm.getCycleList(),
-                        removedDayList: (List<bool> dayList, int index) {
+                        cycleDayList: widget.alarm.orderedCycleList(),
+                        removedDayList: (AlarmCycle dayList, int index) {
                           widget.removedDayList.call(
                             widget.alarm,
                             dayList,

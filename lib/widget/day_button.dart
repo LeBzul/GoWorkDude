@@ -50,7 +50,7 @@ class DayButtonWidgetState extends State<DayButtonWidget> {
               color: widget.activated == false
                   ? (widget.selected != true
                       ? Theme.of(context).colorScheme.onInverseSurface
-                      : Theme.of(context).primaryColorLight)
+                      : Theme.of(context).toggleableActiveColor.withAlpha(100))
                   : widget.selected
                       ? Theme.of(context).primaryColorDark
                       : Theme.of(context).primaryColorLight,

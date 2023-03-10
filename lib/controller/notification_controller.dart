@@ -38,9 +38,19 @@ void onDidReceiveBackgroundNotificationResponse(NotificationResponse details) as
       NotificationController.instance.snoozeAction(alarm);
       break;
   }
+}
 
-  /// On resynchronise le tout, ca fait pas de mal
+@pragma('vm:entry-point')
+void alarmLaunched(int id, Map<String, dynamic> param) async {
+  print("============");
+  print("alarmLaunched START");
+  print("============");
+  WidgetsFlutterBinding.ensureInitialized();
+  AlarmManagerApp.prefs = await SharedPreferences.getInstance();
   NotificationController.instance.synchronizeAllAlarm();
+  print("============");
+  print("alarmLaunched STOP");
+  print("============");
 }
 
 class NotificationController {
@@ -53,6 +63,8 @@ class NotificationController {
   static NotificationController? _instance;
   NotificationController._() {
     _configureLocalTimeZone();
+    _createTimerSynchronizer();
+    alarmLaunched(0, <String, dynamic>{});
   }
 
   static NotificationController get instance => _instance ??= NotificationController._();
@@ -65,7 +77,7 @@ class NotificationController {
     }
     _asNotificationInit = true;
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('ic_launcher');
+    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('ic_notif');
 
     const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
@@ -73,8 +85,6 @@ class NotificationController {
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (details) async {
-        WidgetsFlutterBinding.ensureInitialized();
-        AlarmManagerApp.prefs = await SharedPreferences.getInstance();
         AlarmManagerApp.navigatorKey.currentState?.pushReplacement(
           MaterialPageRoute(
             settings: const RouteSettings(name: '/alarm'),
@@ -90,6 +100,39 @@ class NotificationController {
     return;
   }
 
+  Future<NotificationAppLaunchDetails?> appLaunchWithNotification() async {
+    return await NotificationController.instance.flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+  }
+
+  void goToAlarm(NotificationAppLaunchDetails notificationAppLaunchDetails) {
+    AlarmManagerApp.navigatorKey.currentState?.pushReplacement(
+      MaterialPageRoute(
+        settings: const RouteSettings(name: '/alarm'),
+        builder: (context) => AlarmScreen(
+          details: notificationAppLaunchDetails.notificationResponse,
+        ),
+      ),
+    );
+  }
+
+  /// Crée un alarmManager qui va resynchroniser les alarm toutes les 12h
+  /// - Ceinture bretelle -
+  void _createTimerSynchronizer() async {
+    print("=============");
+    print("createTimerSynchronizer");
+    print("=============");
+    // On resynchronise les alarmes 2x/jours
+    await AndroidAlarmManager.initialize();
+    AndroidAlarmManager.periodic(
+      const Duration(hours: 12),
+      0,
+      alarmLaunched,
+      wakeup: true,
+      rescheduleOnReboot: true,
+      allowWhileIdle: true,
+    );
+  }
+
   Future<void> _createScheduledNotification(Alarm alarm, {bool snooze = false}) async {
     await stopNotification(alarm);
 
@@ -101,12 +144,12 @@ class NotificationController {
       return;
     }
 
-    DateTime? nextAlarm = alarm.getNextDateAlarm();
+    DateTime? nextAlarm = alarm.findNextDateTimeAlarm();
 
-    /// Pas d'alarme de prévu dans les 24h
+    /// Pas d'alarme de prévu
     if (nextAlarm == null && snooze == false) {
       print("=============");
-      print("createScheduledNotification = Pas d'alarme de prévu dans les 24h pour ${alarm.id}");
+      print("createScheduledNotification = Aucune alarme de prévu pour ${alarm.id}");
       print("=============");
       return;
     }

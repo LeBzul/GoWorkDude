@@ -47,6 +47,7 @@ dependencies:
   open_settings: ^2.0.2
   auto_size_text: ^3.0.0
   app_settings: ^4.2.0
+  flutter_ringtone_player: ^3.2.0
 
 dev_dependencies:
   flutter_test:

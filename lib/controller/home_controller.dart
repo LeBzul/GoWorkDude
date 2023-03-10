@@ -34,9 +34,9 @@ class HomeController {
     return list;
   }
 
-  void removeDayList(Alarm alarm, List<bool> dayList, int index) {
+  void removeDayList(Alarm alarm, AlarmCycle dayList, int index) {
     alarm.removeCycle(dayList, index);
-    NotificationController.instance.startNotification(alarm);
+    putOrAddAlarm(alarm);
   }
 
   Future<void> removeAlarm(Alarm alarm) async {
