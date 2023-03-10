@@ -1,0 +1,23 @@
+{
+  "alarm": "Alarme",
+  "no_alarm": "Aucune alarme",
+  "notif_title": "Go Work Dude !",
+  "notif_body": "Réveil de ",
+  "notif_body_snooze": " (Snooze) ",
+  "notif_channel_id": "GoWorkDude!",
+  "notif_channel_name": "GoWorkDude!",
+  "notif_channel_description": "Indispensable pour lancer le reveil !",
+  "button_stop": "Stop",
+  "button_snooze": "Snooze",
+  "permission_title": "Pourquoi ses permissions ?",
+  "permission_description": "Certains paramètres peuvent perturber le bon fonctionnement de \"GoWorkDude\". Voici la liste des permission a activer pour assurer que les alarmes sonnent.",
+  "permission_open": "Ouvrir",
+  "permission_notification_title": "Notification",
+  "permission_notification_description": "Indispensable pour faire fonctionner les réveils",
+  "permission_notification_policy_title": "Ne pas déranger",
+  "permission_notification_policy_description": "Permet aux alarmes de se déclencher en mode \"Ne pas déranger\"",
+  "permission_notification_policy_info": "1. Chercher GoWorkDude\n2. Autoriser \"Ne pas déranger\"",
+  "permission_battery_optimizations_title": "Optimisation de la batterie",
+  "permission_battery_optimizations_description": "L'optimisation de la batterie peut annuler les alarmes",
+  "permission_battery_optimizations_info": "1. Changer la Categorie par \"Toutes les applications\"\n2. Chercher GoWorkDude\n3. Choisir \"Ne pas Optimiser\""
+}

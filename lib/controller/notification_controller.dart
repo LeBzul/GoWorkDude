@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:darty_json/darty_json.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -42,15 +44,14 @@ void onDidReceiveBackgroundNotificationResponse(NotificationResponse details) as
 
 @pragma('vm:entry-point')
 void alarmLaunched(int id, Map<String, dynamic> param) async {
-  print("============");
-  print("alarmLaunched START");
-  print("============");
+  if (kDebugMode) {
+    print("============");
+    print("alarmLaunched START");
+    print("============");
+  }
   WidgetsFlutterBinding.ensureInitialized();
   AlarmManagerApp.prefs = await SharedPreferences.getInstance();
   NotificationController.instance.synchronizeAllAlarm();
-  print("============");
-  print("alarmLaunched STOP");
-  print("============");
 }
 
 class NotificationController {
@@ -118,9 +119,11 @@ class NotificationController {
   /// Crée un alarmManager qui va resynchroniser les alarm toutes les 12h
   /// - Ceinture bretelle -
   void _createTimerSynchronizer() async {
-    print("=============");
-    print("createTimerSynchronizer");
-    print("=============");
+    if (kDebugMode) {
+      print("============");
+      print("createTimerSynchronizer");
+      print("============");
+    }
     // On resynchronise les alarmes 2x/jours
     await AndroidAlarmManager.initialize();
     AndroidAlarmManager.periodic(
@@ -138,9 +141,11 @@ class NotificationController {
 
     /// Alarme désactivé
     if (!alarm.activated) {
-      print("=============");
-      print("createScheduledNotification = Alarme désactivé pour ${alarm.id}");
-      print("=============");
+      if (kDebugMode) {
+        print("============");
+        print("createScheduledNotification = Alarme désactivé pour ${alarm.id}");
+        print("============");
+      }
       return;
     }
 
@@ -148,21 +153,25 @@ class NotificationController {
 
     /// Pas d'alarme de prévu
     if (nextAlarm == null && snooze == false) {
-      print("=============");
-      print("createScheduledNotification = Aucune alarme de prévu pour ${alarm.id}");
-      print("=============");
+      if (kDebugMode) {
+        print("============");
+        print("createScheduledNotification = Aucune alarme de prévu pour ${alarm.id}");
+        print("============");
+      }
       return;
     }
 
-    print("=============");
-    print("createScheduledNotification $nextAlarm, Snooze : $snooze  pour ${alarm.id}");
-    print("=============");
+    if (kDebugMode) {
+      print("=============");
+      print("createScheduledNotification $nextAlarm, Snooze : $snooze  pour ${alarm.id}");
+      print("=============");
+    }
     const int insistentFlag = 4;
     await NotificationController.instance.initLocalNotification();
     await NotificationController.instance.flutterLocalNotificationsPlugin.zonedSchedule(
       snooze == false ? alarm.id : NotificationController.SNOOZE_ALARM_ID,
-      'Go Work Dude !',
-      'Réveil de ${alarm.hourToString()}${snooze == true ? ' (Snooze)' : ''}',
+      language['notif_title'],
+      '${language['notif_body']} ${alarm.hourToString()}${snooze == true ? language['notif_body_snooze'] : ''}',
       snooze == false
           ? tz.TZDateTime.from(nextAlarm!, tz.local)
           : tz.TZDateTime.from(
@@ -172,9 +181,9 @@ class NotificationController {
               tz.local),
       NotificationDetails(
         android: AndroidNotificationDetails(
-          'GoWorkDude',
-          'Notification de lancement du reveil',
-          channelDescription: 'Indispensable pour lancer le reveil',
+          language['notif_channel_id'],
+          language['notif_channel_name'],
+          channelDescription: language['notif_channel_description'],
           priority: Priority.max,
           importance: Importance.max,
           playSound: true,
@@ -205,9 +214,11 @@ class NotificationController {
   }
 
   Future<void> stopNotification(Alarm alarm) async {
-    print("=============");
-    print("cancel Notification pour ${alarm.id}");
-    print("=============");
+    if (kDebugMode) {
+      print("=============");
+      print("cancel Notification pour ${alarm.id}");
+      print("=============");
+    }
     return await NotificationController.instance.flutterLocalNotificationsPlugin.cancel(alarm.id);
   }
 
@@ -251,9 +262,11 @@ class NotificationController {
   }
 
   Future<void> synchronizeAllAlarm() async {
-    print("===========");
-    print("synchronizeAllAlarm");
-    print("===========");
+    if (kDebugMode) {
+      print("=============");
+      print("synchronizeAllAlarm");
+      print("=============");
+    }
     for (var alarm in HomeController().list) {
       await startNotification(alarm);
     }

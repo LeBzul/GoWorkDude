@@ -1,8 +1,15 @@
+import 'dart:convert';
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:goworkdude/controller/notification_controller.dart';
 import 'package:goworkdude/screen/alarm_screen.dart';
 import 'package:goworkdude/screen/home_screen.dart';
+import 'package:goworkdude/screen/permissions_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -25,6 +32,16 @@ class AlarmManagerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Go Work Dude',
+      localizationsDelegates: const [
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('fr', ''),
+        Locale('en', ''),
+      ],
       theme: ThemeData.dark().copyWith(
         primaryColor: const Color(0xff616161),
         primaryColorLight: const Color(0xff757575),
@@ -47,8 +64,37 @@ class AlarmManagerApp extends StatelessWidget {
                 details: notificationResponse,
                 playSound: true,
               ),
+        '/permissions': (context) => const PermissionsScreen(),
         '/alarm': (context) => const AlarmScreen(),
       },
     );
   }
+}
+
+// this class is used for localizations
+class AppLocalizations {
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  String getText(String key) => language[key];
+}
+
+late Map<String, dynamic> language;
+
+class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+  const AppLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => ['fr', 'en'].contains(locale.languageCode);
+
+  @override
+  Future<AppLocalizations> load(Locale locale) async {
+    String string = await rootBundle.loadString("assets/strings/${locale.languageCode.toLowerCase()}.json");
+    language = json.decode(string);
+    return SynchronousFuture<AppLocalizations>(AppLocalizations());
+  }
+
+  @override
+  bool shouldReload(AppLocalizationsDelegate old) => false;
 }

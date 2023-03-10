@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:goworkdude/core/helper/date_helper.dart';
+import 'package:goworkdude/main.dart';
 
 import '../controller/notification_controller.dart';
 import '../model/alarm.dart';
@@ -96,10 +97,10 @@ class AlarmScreenState extends State<AlarmScreen> {
                 maximumSize: const Size(110, 110),
                 minimumSize: const Size(110, 110),
               ),
-              child: const AutoSizeText(
-                'Snooze',
+              child: AutoSizeText(
+                language['button_snooze'],
                 maxLines: 1,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   fontSize: 22,
@@ -122,10 +123,10 @@ class AlarmScreenState extends State<AlarmScreen> {
                 maximumSize: const Size(110, 110),
                 minimumSize: const Size(110, 110),
               ),
-              child: const AutoSizeText(
-                'Stop',
+              child: AutoSizeText(
+                language['button_stop'],
                 maxLines: 1,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   fontSize: 22,
