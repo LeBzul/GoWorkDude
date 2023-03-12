@@ -132,19 +132,22 @@ class PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindin
                 ),
               ),
               item.status != null
-                  ? ElevatedButton(
-                      onPressed: () {
-                        item.openSetting.call();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: item.status == PermissionStatus.granted
-                            ? Theme.of(context).toggleableActiveColor
-                            : Colors.pink,
-                      ),
-                      child: Text(
-                        language['permission_open'],
-                        style: const TextStyle(
-                          color: Colors.black,
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          item.openSetting.call();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: item.status == PermissionStatus.granted
+                              ? Theme.of(context).toggleableActiveColor
+                              : Colors.pink,
+                        ),
+                        child: Text(
+                          language['permission_open'],
+                          style: const TextStyle(
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     )

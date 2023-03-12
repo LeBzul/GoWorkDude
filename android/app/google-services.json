@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "386576330184",
+    "project_id": "go-work-dude",
+    "storage_bucket": "go-work-dude.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:386576330184:android:6608cbb487d324667d24fd",
+        "android_client_info": {
+          "package_name": "com.example.goworkdude"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "386576330184-39ddlpl2uj7f7kigcppoeskpk94kifih.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvDt2WpTvtNohta6-yiJhJ6V1H2zeIILE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "386576330184-39ddlpl2uj7f7kigcppoeskpk94kifih.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

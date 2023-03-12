@@ -86,13 +86,19 @@ class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) => ['fr', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => ['fr_FR', 'fr', 'en_US', 'en'].contains(locale.languageCode);
 
   @override
   Future<AppLocalizations> load(Locale locale) async {
-    String string = await rootBundle.loadString("assets/strings/${locale.languageCode.toLowerCase()}.json");
+    String string =
+        await rootBundle.loadString("assets/strings/${locale.languageCode.split('_').first.toLowerCase()}.json");
     language = json.decode(string);
     return SynchronousFuture<AppLocalizations>(AppLocalizations());
+  }
+
+  static Future<Map<String, dynamic>> getText(String locale) async {
+    String string = await rootBundle.loadString("assets/strings/${locale.split('_').first.toLowerCase()}.json");
+    return json.decode(string);
   }
 
   @override

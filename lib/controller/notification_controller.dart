@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
@@ -138,6 +139,8 @@ class NotificationController {
 
   Future<void> _createScheduledNotification(Alarm alarm, {bool snooze = false}) async {
     await stopNotification(alarm);
+    final String defaultLocale = Platform.localeName;
+    Map<String, dynamic> language = await AppLocalizationsDelegate.getText(defaultLocale);
 
     /// Alarme désactivé
     if (!alarm.activated) {
