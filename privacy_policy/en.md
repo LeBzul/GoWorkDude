@@ -7,7 +7,7 @@ updated on Mar 06, 2023. Our privacy policy may change from time to
 time for any reason. If we make any material changes to our policies,
 we will place a prominent notice on our website or application. If you
 have any questions or concerns about our privacy policies, feel free to
-contact us at <a href="mailto:drouteam@gmail.com" support@jetkite.com="">drouteam@gmail.com</a> at any time.</p>
+contact us at drouteam@gmail.com at any time.</p>
 
 
 ## What information does the Application obtain and how is it used?
