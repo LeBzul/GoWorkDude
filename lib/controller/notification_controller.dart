@@ -8,6 +8,7 @@ import 'package:darty_json/darty_json.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_system_ringtones/flutter_system_ringtones.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:goworkdude/controller/home_controller.dart';
 import 'package:goworkdude/screen/alarm_screen.dart';
@@ -138,6 +139,7 @@ class NotificationController {
   }
 
   Future<void> _createScheduledNotification(Alarm alarm, {bool snooze = false}) async {
+    List<Ringtone> listRingtones = await FlutterSystemRingtones.getAlarmSounds();
     await stopNotification(alarm);
     final String defaultLocale = Platform.localeName;
     Map<String, dynamic> language = await AppLocalizationsDelegate.getText(defaultLocale);

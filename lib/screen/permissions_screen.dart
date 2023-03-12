@@ -63,9 +63,19 @@ class PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindin
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
+            language['permission_subtitle'],
+            style: TextStyle(
+              fontSize: 22,
+              color: Theme.of(context).hintColor,
+            ),
+          ),
+          const SizedBox(
+            height: 12,
+          ),
+          Text(
             language['permission_description'],
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               color: Theme.of(context).hintColor,
             ),
           ),
@@ -166,7 +176,11 @@ class PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindin
       case AppLifecycleState.resumed:
         controller.refreshStatus(
           () {
-            setState(() {});
+            if (controller.asAllGranted()) {
+              AlarmManagerApp.navigatorKey.currentState?.pop();
+            } else {
+              setState(() {});
+            }
           },
         );
         break;

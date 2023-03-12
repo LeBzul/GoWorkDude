@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:goworkdude/main.dart';
 import 'package:goworkdude/model/alarm.dart';
 
 import 'day_list_widget.dart';
@@ -45,7 +46,7 @@ class CycleDayListWidgetState extends State<CycleDayListWidget> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "Cette semaine",
+                  language["cycle_0"],
                   style: TextStyle(
                       color: widget.activated
                           ? Theme.of(context).colorScheme.inversePrimary
@@ -87,10 +88,10 @@ class CycleDayListWidgetState extends State<CycleDayListWidget> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   i == 0
-                      ? "Cette semaine"
+                      ? language["cycle_0"]
                       : i == 1
-                          ? "Semaine prochaine"
-                          : "Dans $i semaines",
+                          ? language["cycle_1"]
+                          : "${language["cycle_other_0"]} $i ${language["cycle_other_1"]}",
                   style: TextStyle(
                       color: widget.activated
                           ? Theme.of(context).colorScheme.inversePrimary

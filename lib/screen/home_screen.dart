@@ -23,6 +23,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addObserver(this);
     AndroidAlarmManager.initialize();
     controller = HomeController();
